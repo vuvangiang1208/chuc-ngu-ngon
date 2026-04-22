@@ -12,8 +12,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Moon, Star, Heart, Cloud } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-const STARS_COUNT = 50;
-const FIREWORK_PARTICLES = 24;
+const STARS_COUNT = 60;
+const FIREWORK_PARTICLES = 36; // Increased from 24
 
 interface Particle {
   id: number;
@@ -23,6 +23,7 @@ interface Particle {
   vy: number;
   size: number;
   color: string;
+  rotation: number;
 }
 
 export default function App() {
@@ -44,17 +45,27 @@ export default function App() {
     const startTime = Date.now();
     const duration = 96 * 1000;
 
+    const fireBurst = () => {
+      // Fire 5 fireworks at once for massive density
+      for(let i = 0; i < 5; i++) {
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * window.innerHeight;
+        setTimeout(() => createHeartFirework(x, y), i * 100);
+      }
+    };
+
+    // Fire immediately on load
+    fireBurst();
+
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       if (elapsed < duration) {
-        const x = Math.random() * window.innerWidth;
-        const y = Math.random() * (window.innerHeight * 0.6) + (window.innerHeight * 0.1);
-        createHeartFirework(x, y);
+        fireBurst();
       } else {
         setIsAutoFiring(false);
         clearInterval(interval);
       }
-    }, 1500); // Fire every 1.5 seconds
+    }, 1000); // Fire a burst every second
 
     return () => clearInterval(interval);
   }, []);
@@ -63,6 +74,9 @@ export default function App() {
     const particles: Particle[] = [];
     const timestamp = Date.now();
     
+    // Heart curve formula: 
+    // x = 16sin^3(t)
+    // y = 13cos(t) - 5cos(2t) - 2cos(3t) - cos(4t)
     for (let i = 0; i < FIREWORK_PARTICLES; i++) {
       const t = (i / FIREWORK_PARTICLES) * 2 * Math.PI;
       const x = 16 * Math.pow(Math.sin(t), 3);
@@ -72,17 +86,20 @@ export default function App() {
         id: timestamp + i,
         x: centerX,
         y: centerY,
-        vx: x * 0.6,
-        vy: y * 0.6,
-        size: Math.random() * 8 + 8,
-        color: `hsl(${Math.random() * 40 + 320}, 100%, 75%)`, // Pink/Magenta range
+        vx: x * 0.8, // Increased spread
+        vy: y * 0.8,
+        size: Math.random() * 12 + 12, // Larger particles
+        color: `hsl(${Math.random() * 60 + 330}, 100%, 75%)`,
+        rotation: Math.random() * 360,
       });
     }
     
     setFireworks((prev) => [...prev, ...particles]);
+    
+    // Cleanup after animation completes
     setTimeout(() => {
-      setFireworks((prev) => prev.filter((p) => !particles.find(newP => newP.id === p.id)));
-    }, 2000);
+      setFireworks((prev) => prev.filter((p) => p.id < timestamp || p.id >= timestamp + FIREWORK_PARTICLES));
+    }, 2500);
   };
 
   return (
@@ -90,20 +107,25 @@ export default function App() {
       className="relative w-full h-screen overflow-hidden bg-[#1a0a1a] cursor-pointer"
       onClick={(e) => createHeartFirework(e.clientX, e.clientY)}
     >
-      {/* Background Hidden Names Intertwined */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none">
+      {/* Background Hidden Names Intertwined - Repositioned to Bottom to avoid being covered */}
+      <div className="absolute bottom-[8%] left-0 w-full flex items-center justify-center pointer-events-none overflow-hidden select-none z-0">
         <motion.div 
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.05 }}
+          animate={{ opacity: 0.12 }}
           transition={{ duration: 3 }}
-          className="relative flex flex-col items-center justify-center scale-150 rotate-[-15deg]"
+          className="relative flex items-center justify-center gap-4 text-pink-200"
         >
-          <div className="font-serif text-[12vw] whitespace-nowrap text-pink-200 leading-none opacity-40">
-            Vũ Văn Giang
+          <div className="font-serif text-[4vw] whitespace-nowrap leading-none text-right">
+            Văn Giang
           </div>
-          <Heart size={300} className="text-pink-300 -my-20 opacity-30" fill="currentColor" />
-          <div className="font-serif text-[12vw] whitespace-nowrap text-pink-200 leading-none opacity-40">
-            Trần Khánh Chi
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            <Heart size={80} className="text-pink-400 opacity-60" fill="currentColor" />
+          </motion.div>
+          <div className="font-serif text-[4vw] whitespace-nowrap leading-none text-left">
+            Khánh Chi
           </div>
         </motion.div>
       </div>
@@ -224,20 +246,22 @@ export default function App() {
               x: p.x, 
               y: p.y, 
               scale: 0,
-              opacity: 1 
+              opacity: 1,
+              rotate: p.rotation
             }}
             animate={{ 
-              x: p.x + p.vx * 12, 
-              y: p.y + p.vy * 12,
-              scale: [0, 1.2, 0.6],
-              opacity: 0
+              x: p.x + p.vx * 15, // even more spread
+              y: p.y + p.vy * 15,
+              scale: [0, 1.5, 0.8],
+              opacity: 0,
+              rotate: p.rotation + 90
             }}
             exit={{ opacity: 0 }}
             transition={{ 
-              duration: 1.8, 
+              duration: 2.2, 
               ease: "easeOut"
             }}
-            className="absolute pointer-events-none z-50"
+            className="absolute pointer-events-none z-50 origin-center"
           >
             <Heart size={p.size} style={{ color: p.color }} fill="currentColor" />
           </motion.div>
