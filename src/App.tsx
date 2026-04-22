@@ -240,8 +240,8 @@ export default function App() {
           </div>
 
           <p className="text-base md:text-lg lg:text-xl font-sans font-light text-pink-50/80 leading-relaxed tracking-[0.5px]">
-            Chúc em có một giấc ngủ thật ngon và những giấc mơ ngọt ngào nhất. 
-            Anh luôn ở đây, bảo vệ và yêu thương em mỗi ngày. 
+            Chúc vợ có một giấc ngủ thật ngon và những giấc mơ ngọt ngào nhất. 
+            Anh luôn ở đây, bảo vệ và yêu thương vợ mỗi ngày. 
             Ngủ ngon nhé, công chúa của anh.
           </p>
 
