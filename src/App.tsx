@@ -9,11 +9,12 @@
  */
 
 import { motion, AnimatePresence } from 'motion/react';
-import { Moon, Star, Heart, Cloud } from 'lucide-react';
+import { Moon, Star, Heart, Cloud, Flower } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const STARS_COUNT = 60;
 const FIREWORK_PARTICLES = 36; // Increased from 24
+const ROSES_COUNT = 15;
 
 interface Particle {
   id: number;
@@ -26,10 +27,20 @@ interface Particle {
   rotation: number;
 }
 
+interface FallingRose {
+  id: number;
+  x: number;
+  size: number;
+  duration: number;
+  delay: number;
+  rotation: number;
+}
+
 export default function App() {
   const [stars, setStars] = useState<{ id: number; x: number; y: number; size: number; delay: number }[]>([]);
   const [fireworks, setFireworks] = useState<Particle[]>([]);
   const [isAutoFiring, setIsAutoFiring] = useState(true);
+  const [fallingRoses, setFallingRoses] = useState<FallingRose[]>([]);
 
   useEffect(() => {
     const newStars = Array.from({ length: STARS_COUNT }).map((_, i) => ({
@@ -40,6 +51,16 @@ export default function App() {
       delay: Math.random() * 5,
     }));
     setStars(newStars);
+
+    const newRoses = Array.from({ length: ROSES_COUNT }).map((_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      size: Math.random() * 20 + 20,
+      duration: Math.random() * 15 + 15,
+      delay: Math.random() * 20,
+      rotation: Math.random() * 360,
+    }));
+    setFallingRoses(newRoses);
 
     // Automatic firework display for 1 minute 36 seconds (96s)
     const startTime = Date.now();
@@ -236,6 +257,28 @@ export default function App() {
           </footer>
         </motion.div>
       </div>
+
+      {/* Falling Roses */}
+      {fallingRoses.map((rose) => (
+        <motion.div
+          key={rose.id}
+          className="absolute text-red-500/30 pointer-events-none"
+          initial={{ y: -100, x: `${rose.x}%`, rotate: rose.rotation, opacity: 0 }}
+          animate={{ 
+            y: window.innerHeight + 100,
+            rotate: rose.rotation + 360,
+            opacity: [0, 0.4, 0]
+          }}
+          transition={{
+            duration: rose.duration,
+            repeat: Infinity,
+            delay: rose.delay,
+            ease: "linear"
+          }}
+        >
+          <Flower size={rose.size} fill="currentColor" />
+        </motion.div>
+      ))}
 
       {/* Heart Fireworks Animation */}
       <AnimatePresence>
